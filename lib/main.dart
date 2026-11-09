@@ -69,6 +69,7 @@ class _HomePageState extends State<HomePage> {
   String selectedType = 'All';
   String selectedPurpose = 'Buy';
   String sort = 'Recommended';
+  String currentPage = 'Explore';
 
   List<Property> get visibleProperties {
     var list = properties.where((p) {
@@ -91,54 +92,259 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 760;
-    final columns = width > 1180 ? 3 : width > 760 ? 2 : 1;
     return Scaffold(
       body: SafeArea(
         child: Column(children: [
           _header(compact),
-          Expanded(child: SingleChildScrollView(
-            child: Center(child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1240),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 18 : 34, vertical: 26),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _hero(compact),
-                  const SizedBox(height: 28),
-                  _searchPanel(compact),
-                  const SizedBox(height: 34),
-                  Row(children: [
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('Handpicked homes for you', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: ink)),
-                      const SizedBox(height: 5),
-                      Text('${visibleProperties.length} properties matching your search', style: const TextStyle(color: muted, fontSize: 13)),
-                    ])),
-                    if (!compact) _sortDropdown(),
-                  ]),
-                  const SizedBox(height: 18),
-                  _typeFilters(),
-                  const SizedBox(height: 20),
-                  if (visibleProperties.isEmpty)
-                    const Padding(padding: EdgeInsets.all(40), child: Center(child: Text('No properties found. Try another search.')))
-                  else
-                    LayoutBuilder(builder: (context, constraints) {
-                      final gap = 18.0;
-                      final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
-                      return Wrap(spacing: gap, runSpacing: gap,
-                        children: visibleProperties.map((p) => SizedBox(width: cardWidth, child: _propertyCard(p))).toList());
-                    }),
-                  const SizedBox(height: 36),
-                  _bottomBanner(compact),
-                  const SizedBox(height: 26),
-                  const Center(child: Text('© 2026 EstateEase  •  Find a place to call home', style: TextStyle(color: muted, fontSize: 12))),
-                  const SizedBox(height: 12),
-                ]),
-              ),
-            )),
-          )),
+          Expanded(child: _pageContent(compact)),
         ]),
       ),
     );
   }
+
+
+  Widget _pageContent(bool compact) {
+    if (currentPage == 'Saved homes') return _savedHomesPage(compact);
+    if (currentPage == 'About us') return _aboutUsPage(compact);
+    return _explorePage(compact);
+  }
+
+  Widget _pageShell(bool compact, Widget child) => SingleChildScrollView(
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1240),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: compact ? 18 : 34, vertical: 26),
+          child: child,
+        ),
+      ),
+    ),
+  );
+
+  Widget _explorePage(bool compact) {
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = width > 1180 ? 3 : width > 760 ? 2 : 1;
+    return _pageShell(compact, Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _hero(compact),
+        const SizedBox(height: 28),
+        _searchPanel(compact),
+        const SizedBox(height: 34),
+        Row(children: [
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Handpicked homes for you',
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: ink)),
+              const SizedBox(height: 5),
+              Text('${visibleProperties.length} properties matching your search',
+                style: const TextStyle(color: muted, fontSize: 13)),
+            ],
+          )),
+          if (!compact) _sortDropdown(),
+        ]),
+        const SizedBox(height: 18),
+        _typeFilters(),
+        const SizedBox(height: 20),
+        if (visibleProperties.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(40),
+            child: Center(child: Text('No properties found. Try another search.')),
+          )
+        else
+          LayoutBuilder(builder: (context, constraints) {
+            const gap = 18.0;
+            final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: visibleProperties.map((p) =>
+                SizedBox(width: cardWidth, child: _propertyCard(p))).toList(),
+            );
+          }),
+        const SizedBox(height: 36),
+        _bottomBanner(compact),
+        const SizedBox(height: 26),
+        const Center(child: Text('© 2026 EstateEase  •  Find a place to call home',
+          style: TextStyle(color: muted, fontSize: 12))),
+        const SizedBox(height: 12),
+      ],
+    ));
+  }
+
+  Widget _savedHomesPage(bool compact) {
+    final savedProperties = properties.where((p) => favorites.contains(p.title)).toList();
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = width > 1180 ? 3 : width > 760 ? 2 : 1;
+
+    return _pageShell(compact, Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Saved homes',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: ink)),
+        const SizedBox(height: 6),
+        Text(
+          savedProperties.isEmpty
+            ? 'Your favourite properties will appear here.'
+            : '${savedProperties.length} ${savedProperties.length == 1 ? 'home' : 'homes'} saved',
+          style: const TextStyle(color: muted, fontSize: 13),
+        ),
+        const SizedBox(height: 24),
+        if (savedProperties.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 52),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.favorite_border_rounded, size: 52, color: navy.withOpacity(.45)),
+                const SizedBox(height: 14),
+                const Text('No saved homes yet',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: ink)),
+                const SizedBox(height: 7),
+                const Text('Tap the heart on any property to save it here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: muted, fontSize: 13)),
+                const SizedBox(height: 18),
+                FilledButton(
+                  onPressed: () => setState(() => currentPage = 'Explore'),
+                  style: FilledButton.styleFrom(backgroundColor: navy),
+                  child: const Text('Explore homes'),
+                ),
+              ],
+            ),
+          )
+        else
+          LayoutBuilder(builder: (context, constraints) {
+            const gap = 18.0;
+            final cardWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: savedProperties.map((p) =>
+                SizedBox(width: cardWidth, child: _propertyCard(p))).toList(),
+            );
+          }),
+        const SizedBox(height: 30),
+        const Center(child: Text('© 2026 EstateEase  •  Find a place to call home',
+          style: TextStyle(color: muted, fontSize: 12)),
+        ),
+        const SizedBox(height: 12),
+      ],
+    ));
+  }
+
+  Widget _aboutUsPage(bool compact) => _pageShell(compact, Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(compact ? 24 : 38),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [navy, Color(0xFF467A8A)],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('ABOUT ESTATEEASE',
+              style: TextStyle(color: Color(0xFFD7F4EC), fontSize: 11,
+                fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+            const SizedBox(height: 14),
+            Text('Finding a place to call home, made easier.',
+              style: TextStyle(color: Colors.white,
+                fontSize: compact ? 27 : 36, height: 1.2, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            const Text(
+              'EstateEase helps people explore thoughtfully selected residential properties across Hyderabad.',
+              style: TextStyle(color: Color(0xFFD8E2EE), fontSize: 14, height: 1.6),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 28),
+      const Text('Who we are',
+        style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: ink)),
+      const SizedBox(height: 10),
+      const Text(
+        'EstateEase is a real estate discovery experience designed to make browsing homes simple and convenient. '
+        'We bring property information together in one place so that you can explore different home types, '
+        'compare basic details and shortlist the places that interest you.',
+        style: TextStyle(color: muted, fontSize: 14, height: 1.8),
+      ),
+      const SizedBox(height: 24),
+      const Text('What you can do with EstateEase',
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: ink)),
+      const SizedBox(height: 14),
+      _aboutPoint(Icons.search_rounded, 'Explore properties',
+        'Browse homes across Hyderabad and search by property name or locality.'),
+      _aboutPoint(Icons.tune_rounded, 'Find what fits',
+        'Filter listings by property type and sort them by price.'),
+      _aboutPoint(Icons.favorite_border_rounded, 'Save your favourites',
+        'Keep the homes you like together in your Saved homes section.'),
+      const SizedBox(height: 28),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Start exploring',
+              style: TextStyle(color: ink, fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            const Text('Your next chapter could start with the right home.',
+              style: TextStyle(color: muted, fontSize: 13)),
+            const SizedBox(height: 14),
+            FilledButton(
+              onPressed: () => setState(() => currentPage = 'Explore'),
+              style: FilledButton.styleFrom(backgroundColor: mint),
+              child: const Text('Explore homes'),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 26),
+      const Center(child: Text('© 2026 EstateEase  •  Find a place to call home',
+        style: TextStyle(color: muted, fontSize: 12))),
+      const SizedBox(height: 12),
+    ],
+  ));
+
+  Widget _aboutPoint(IconData icon, String title, String description) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(color: const Color(0xFFEAF4F2),
+            borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: mint, size: 21),
+        ),
+        const SizedBox(width: 13),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(color: ink,
+              fontWeight: FontWeight.w800, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(description, style: const TextStyle(color: muted,
+              fontSize: 12, height: 1.5)),
+          ],
+        )),
+      ],
+    ),
+  );
 
   Widget _header(bool compact) => Container(
     color: Colors.white,
@@ -151,9 +357,17 @@ class _HomePageState extends State<HomePage> {
         const Text('EstateEase', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: ink, letterSpacing: -.6)),
         const Spacer(),
         if (!compact) ...[
-          _navItem('Explore', true), const SizedBox(width: 28), _navItem('Saved homes', false),
-          const SizedBox(width: 28), _navItem('About us', false), const SizedBox(width: 30),
-        ],
+          _navItem('Explore'), const SizedBox(width: 28), _navItem('Saved homes'),
+          const SizedBox(width: 28), _navItem('About us'), const SizedBox(width: 30),
+        ] else
+          PopupMenuButton<String>(
+            tooltip: 'Navigate',
+            icon: const Icon(Icons.menu_rounded, color: navy),
+            onSelected: (value) => setState(() => currentPage = value),
+            itemBuilder: (context) => ['Explore', 'Saved homes', 'About us']
+              .map((item) => PopupMenuItem<String>(value: item, child: Text(item)))
+              .toList(),
+          ),
         OutlinedButton.icon(onPressed: () => _message('Sign in screen coming soon!'),
           icon: const Icon(Icons.person_outline, size: 18), label: Text(compact ? 'Sign in' : 'Sign in'),
           style: OutlinedButton.styleFrom(foregroundColor: navy, side: const BorderSide(color: Color(0xFFDCE2EA)),
@@ -162,8 +376,21 @@ class _HomePageState extends State<HomePage> {
     )),
   );
 
-  Widget _navItem(String text, bool active) => InkWell(onTap: () => _message('$text selected'),
-    child: Text(text, style: TextStyle(color: active ? navy : muted, fontWeight: active ? FontWeight.w700 : FontWeight.w500, fontSize: 13)));
+  Widget _navItem(String text) {
+    final active = currentPage == text;
+    return InkWell(
+      onTap: () => setState(() => currentPage = text),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(text, style: TextStyle(
+          color: active ? navy : muted,
+          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+          fontSize: 13,
+        )),
+      ),
+    );
+  }
 
   Widget _hero(bool compact) => Container(
     width: double.infinity, padding: EdgeInsets.all(compact ? 24 : 38),

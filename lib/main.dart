@@ -31,9 +31,22 @@ class Property {
   final String title, location, image, type, beds, baths, area;
   final int price;
   final bool featured;
-  const Property({required this.title, required this.location, required this.image,
-    required this.type, required this.beds, required this.baths, required this.area,
-    required this.price, this.featured = false});
+  final String description;
+  final List<String> amenities;
+
+  const Property({
+    required this.title,
+    required this.location,
+    required this.image,
+    required this.type,
+    required this.beds,
+    required this.baths,
+    required this.area,
+    required this.price,
+    this.featured = false,
+    this.description = 'A thoughtfully designed home in a well-connected neighbourhood, offering comfortable spaces for everyday living.',
+    this.amenities = const ['Covered parking', '24/7 security', 'Power backup', 'Water supply'],
+  });
 }
 
 const properties = [
@@ -541,10 +554,10 @@ class _HomePageState extends State<HomePage> {
     decoration: BoxDecoration(color: const Color(0xFFEAF4F2), borderRadius: BorderRadius.circular(18)),
     child: Row(children: [
       const Icon(Icons.support_agent_rounded, size: 38, color: mint), const SizedBox(width: 15),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Need a little help finding the right home?', style: TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: 14)),
-        const SizedBox(height: 4),
-        const Text('Our property experts are just a message away.', style: TextStyle(color: muted, fontSize: 11)),
+      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Need a little help finding the right home?', style: TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: 14)),
+        SizedBox(height: 4),
+        Text('Our property experts are just a message away.', style: TextStyle(color: muted, fontSize: 11)),
       ])),
       if (!compact) FilledButton(onPressed: () => _message('An expert will contact you soon.'),
         style: FilledButton.styleFrom(backgroundColor: navy, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -553,24 +566,169 @@ class _HomePageState extends State<HomePage> {
   );
 
   void _showProperty(Property p) {
-    showDialog(context: context, builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      title: Text(p.title, style: const TextStyle(color: ink, fontWeight: FontWeight.w800)),
-      content: SizedBox(width: 360, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(p.image, height: 150, width: double.infinity, fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const SizedBox(height: 100, child: Icon(Icons.home_work, size: 45)))),
-        const SizedBox(height: 12),
-        Text(p.location, style: const TextStyle(color: muted)),
-        const SizedBox(height: 8),
-        Text('${money(p.price)}  •  ${p.beds}  •  ${p.baths}  •  ${p.area}', style: const TextStyle(color: navy, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        const Text('A thoughtfully designed home in a well-connected neighbourhood. Contact our team to schedule a visit.', style: TextStyle(color: muted, height: 1.4)),
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-        FilledButton(onPressed: () { Navigator.pop(context); _message('Visit request submitted for ${p.title}.'); }, child: const Text('Schedule a visit'))],
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PropertyDetailsPage(
+        property: p,
+        money: money,
+      ),
     ));
   }
 
   void _message(String message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content: Text(message), behavior: SnackBarBehavior.floating, backgroundColor: navy));
+}
+
+
+class PropertyDetailsPage extends StatelessWidget {
+  final Property property;
+  final String Function(int) money;
+
+  const PropertyDetailsPage({
+    super.key,
+    required this.property,
+    required this.money,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+    return Scaffold(
+      backgroundColor: page,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: ink,
+        elevation: 0,
+        title: const Text('Property details', style: TextStyle(fontWeight: FontWeight.w800)),
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Padding(
+              padding: EdgeInsets.all(compact ? 16 : 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: AspectRatio(
+                      aspectRatio: compact ? 1.35 : 2.35,
+                      child: Image.network(
+                        property.image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFFE6ECF2),
+                          child: const Icon(Icons.home_work_rounded, size: 64, color: muted),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(property.title, style: TextStyle(color: ink, fontSize: compact ? 23 : 30, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 8),
+                            Row(children: [
+                              const Icon(Icons.location_on_outlined, color: mint, size: 18),
+                              const SizedBox(width: 5),
+                              Expanded(child: Text(property.location, style: const TextStyle(color: muted, fontSize: 14))),
+                            ]),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(money(property.price), style: TextStyle(color: navy, fontSize: compact ? 18 : 23, fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceAround,
+                      runSpacing: 16,
+                      children: [
+                        _detailItem(Icons.bed_outlined, property.beds, 'Bedrooms'),
+                        _detailItem(Icons.bathtub_outlined, property.baths, 'Bathrooms'),
+                        _detailItem(Icons.square_foot_rounded, property.area, 'Built-up area'),
+                        _detailItem(Icons.home_work_outlined, property.type, 'Property type'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  _sectionTitle('About this property'),
+                  const SizedBox(height: 10),
+                  Text(property.description, style: const TextStyle(color: muted, fontSize: 14, height: 1.7)),
+                  const SizedBox(height: 26),
+                  _sectionTitle('Amenities'),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: property.amenities.map((amenity) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE4E8EF))),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.check_circle_outline, color: mint, size: 16),
+                        const SizedBox(width: 7),
+                        Text(amenity, style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ]),
+                    )).toList(),
+                  ),
+                  const SizedBox(height: 26),
+                  _sectionTitle('Location'),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                    child: Row(children: [
+                      const Icon(Icons.place_outlined, color: mint, size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(property.location, style: const TextStyle(color: ink, fontWeight: FontWeight.w600))),
+                    ]),
+                  ),
+                  const SizedBox(height: 26),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE7EBF1))),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Starting price', style: TextStyle(color: muted, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text(money(property.price), style: const TextStyle(color: navy, fontSize: 25, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 5),
+                      const Text('Price shown is indicative for this demonstration listing.', style: TextStyle(color: muted, fontSize: 11)),
+                    ]),
+                  ),
+                  const SizedBox(height: 28),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) => Text(
+    title,
+    style: const TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w800),
+  );
+
+  Widget _detailItem(IconData icon, String value, String label) => SizedBox(
+    width: 125,
+    child: Column(children: [
+      Icon(icon, color: navy, size: 21),
+      const SizedBox(height: 6),
+      Text(value, style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 3),
+      Text(label, style: const TextStyle(color: muted, fontSize: 10)),
+    ]),
+  );
 }

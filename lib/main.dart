@@ -214,7 +214,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Column(
               children: [
-                Icon(Icons.favorite_border_rounded, size: 52, color: navy.withOpacity(.45)),
+                Icon(Icons.favorite_border_rounded, size: 52, color: navy.withValues(alpha: .45)),
                 const SizedBox(height: 14),
                 const Text('No saved homes yet',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: ink)),
@@ -413,10 +413,10 @@ class _HomePageState extends State<HomePage> {
         colors: [Color(0xFF203A63), Color(0xFF315782), Color(0xFF467A8A)]),
     ),
     child: Stack(children: [
-      Positioned(right: -10, top: -22, child: Icon(Icons.home_work_outlined, size: compact ? 115 : 190, color: Colors.white.withOpacity(.08))),
+      Positioned(right: -10, top: -22, child: Icon(Icons.home_work_outlined, size: compact ? 115 : 190, color: Colors.white.withValues(alpha: .08))),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(.13), borderRadius: BorderRadius.circular(30)),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(30)),
           child: const Text('YOUR NEXT CHAPTER STARTS HERE', style: TextStyle(color: Color(0xFFD7F4EC), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2))),
         const SizedBox(height: 17),
         Text('Find a place\nyou’ll love to call home.', style: TextStyle(color: Colors.white, fontSize: compact ? 29 : 39, height: 1.13, fontWeight: FontWeight.w800, letterSpacing: -1.1)),
@@ -438,7 +438,7 @@ class _HomePageState extends State<HomePage> {
   Widget _searchPanel(bool compact) => Container(
     padding: EdgeInsets.all(compact ? 16 : 20),
     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18),
-      boxShadow: [BoxShadow(color: const Color(0xFF233B5D).withOpacity(.06), blurRadius: 24, offset: const Offset(0, 8))]),
+      boxShadow: [BoxShadow(color: const Color(0xFF233B5D).withValues(alpha: .06), blurRadius: 24, offset: const Offset(0, 8))]),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         _purposeTab('Buy'), const SizedBox(width: 8), _purposeTab('Rent'), const SizedBox(width: 8), _purposeTab('Commercial'),
@@ -500,7 +500,7 @@ class _HomePageState extends State<HomePage> {
     final saved = favorites.contains(p.title);
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17),
-        boxShadow: [BoxShadow(color: const Color(0xFF243B5B).withOpacity(.045), blurRadius: 18, offset: const Offset(0, 6))]),
+        boxShadow: [BoxShadow(color: const Color(0xFF243B5B).withValues(alpha: .045), blurRadius: 18, offset: const Offset(0, 6))]),
       clipBehavior: Clip.antiAlias,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Stack(children: [
@@ -511,7 +511,7 @@ class _HomePageState extends State<HomePage> {
             child: Text(p.featured ? 'FEATURED' : p.type.toUpperCase(), style: const TextStyle(color: navy, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: .5)))),
           Positioned(right: 12, top: 12, child: InkWell(onTap: () => setState(() {
             saved ? favorites.remove(p.title) : favorites.add(p.title);
-          }), child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          }), child: Container(width: 34, height: 34, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
             child: Icon(saved ? Icons.favorite : Icons.favorite_border, color: saved ? Colors.redAccent : navy, size: 18)))),
         ]),
         Padding(padding: const EdgeInsets.fromLTRB(16, 14, 16, 16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
